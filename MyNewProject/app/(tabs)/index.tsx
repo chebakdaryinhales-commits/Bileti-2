@@ -1,98 +1,81 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Button, TextInput, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function LoginScreen() {
+  const router = useRouter();
+  const [infoText, setInfoText] = useState<string>('Исходный текст');
+  const [inputText, setInputText] = useState<string>('');
+  const [login, setLogin] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [date, setDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [bgColor, setBgColor] = useState<string>('#ffffff');
 
-export default function HomeScreen() {
+  useEffect(() => {
+    AsyncStorage.getItem('backgroundColor').then(color => color && setBgColor(color));
+  }, []);
+
+  const changeAndSaveColor = async (color: string) => {
+    setBgColor(color);
+    await AsyncStorage.setItem('backgroundColor', color);
+  };
+
+  const handleLogin = () => {
+    if (password.length < 6) {
+      Alert.alert('Ошибка', 'Пароль должен быть не менее 6 символов!');
+      return;
+    }
+    Alert.alert('Подтверждение', `Вы уверены, что хотите войти как ${login}?`, [
+  { text: 'Отмена', style: 'cancel' },
+  { 
+    text: 'ОК', 
+    onPress: () => router.push({ pathname: '/details', params: { user: login } }) 
+  }
+]);
+
+  };
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) setDate(selectedDate);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      <Text style={styles.title}>{infoText}</Text>
+      <Button title="Изменить текст" onPress={() => setInfoText('Текст успешно изменен!')} />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <TextInput style={styles.input} placeholder="Введите текст..." value={inputText} onChangeText={setInputText} />
+      <Text style={styles.previewText}>Вы ввели: {inputText}</Text>
+
+      <View style={styles.loginForm}>
+        <TextInput style={styles.input} placeholder="Логин" value={login} onChangeText={setLogin} />
+        <TextInput style={styles.input} placeholder="Пароль" secureTextEntry value={password} onChangeText={setPassword} />
+        <Button title="Войти" onPress={handleLogin} />
+      </View>
+
+      <Button title="Выбрать дату" onPress={() => setShowDatePicker(true)} />
+      <Text style={{ textAlign: 'center', marginVertical: 5 }}>Дата: {date.toLocaleDateString()}</Text>
+      {showDatePicker && (
+        <DateTimePicker value={date} mode="date" display="default" onChange={onDateChange} />
+      )}
+
+      <View style={styles.row}>
+        <Button title="Светлый" onPress={() => changeAndSaveColor('#ffffff')} />
+        <Button title="Серый" onPress={() => changeAndSaveColor('#e0e0e0')} />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
+  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 5, marginTop: 10, backgroundColor: '#fff' },
+  previewText: { fontStyle: 'italic', marginBottom: 10, color: '#555' },
+  loginForm: { marginVertical: 15, padding: 15, borderWidth: 1, borderColor: '#ddd', borderRadius: 8 },
+  row: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
 });

@@ -1,33 +1,27 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
+        headerShown: true, // Включаем верхний заголовок (ActionBar)
       }}>
+      {/* Главная вкладка — экран логина */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Авторизация',
+          tabBarLabel: 'Вход',
         }}
       />
+      {/* Экран деталей скрываем из нижнего меню вкладок */}
       <Tabs.Screen
-        name="explore"
+        name="details"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Второй экран',
+          href: null, // Это свойство полностью скрывает вкладку с панели
         }}
       />
     </Tabs>
